@@ -8,7 +8,7 @@ module.exports = {
   entry: './src/index.js',
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'app.bundle.js'
+    filename: 'app.bundle.js',
   },
   devtool: NODE_ENV === 'development' ? 'eval' : null,
 
@@ -17,38 +17,37 @@ module.exports = {
       {
         test: /\.html$/,
         use: {
-          loader: 'html-loader'
-        }
+          loader: 'html-loader',
+        },
       },
       {
         test: /\.js$/,
         exclude: /(node_modules)/,
         use: {
-          loader: 'babel-loader'
-        }
+          loader: 'babel-loader',
+        },
       },
       {
         test: /\.scss$/,
-        use: ['style-loader', 'css-loader', 'sass-loader']
+        use: ['style-loader', 'css-loader', 'sass-loader'],
       },
       {
         test: /\.(eot|ttf|woff|woff2)$/,
         use: {
           loader: 'file-loader',
           options: {
-            name: 'fonts/[folder]_[name].[ext]'
-          }
-        }
-      }
-    ]
+            name: 'fonts/[folder]_[name].[ext]',
+          },
+        },
+      },
+    ],
   },
 
   plugins: [
     new HtmlWebpackPlugin({
       template: path.resolve(__dirname, 'src/layouts/index.html'),
-      inject: 'body'
+      inject: 'body',
     }),
-    new webpack.optimize.UglifyJsPlugin({ minimize: true }),
-    new webpack.EnvironmentPlugin('NODE_ENV')
-  ]
+    new webpack.EnvironmentPlugin('NODE_ENV'),
+  ],
 };
