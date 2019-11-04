@@ -85,4 +85,33 @@ export default class Keyboard {
       alt: false,
     };
   }
+
+  init() {
+    const keyboardContainer = createDOMElement('div', 'keyboard_container');
+    const textArea = createDOMElement('textarea');
+    keyboardContainer.appendChild(textArea);
+
+    this.codesLayout.forEach((code) => {
+      const keyBox = createDOMElement(
+        'div',
+        'key_box',
+        {},
+        {
+          'data-code': `${code}`,
+        },
+      );
+
+      const innerText = this.keysData.controlKeys[code]
+        || this.keysData.modifierKeys[code]
+        || this.keysData.alphanumericKeys.normal[code];
+      const keyText = createDOMElement('span', 'key_box--text', {
+        innerText,
+      });
+
+      keyBox.appendChild(keyText);
+      keyboardContainer.appendChild(keyBox);
+    });
+
+    document.body.appendChild(keyboardContainer);
+  }
 }
