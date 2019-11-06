@@ -124,6 +124,33 @@ export default class Keyboard {
 
       document.querySelector(`[data-code=${e.code}]`).classList.add('pressed');
 
+      switch (e.code) {
+        case 'ShiftLeft':
+        case 'ShiftRight':
+          this.toggleShiftMode();
+          this.updateAlphanumericSector();
+          break;
+        case 'CapsLock':
+          this.changeRegister();
+          this.updateAlphanumericSector();
+          this.modifiers.caps = !this.modifiers.caps;
+          break;
+        case 'ControlLeft':
+        case 'ControlRight':
+          this.modifiers.ctrl = !this.modifiers.ctrl;
+          break;
+        case 'MetaLeft':
+          this.modifiers.meta = !this.modifiers.meta;
+          break;
+        case 'AltLeft':
+        case 'AltRight':
+          this.modifiers.alt = !this.modifiers.alt;
+          break;
+        case 'Tab':
+          break;
+        default:
+      }
+
       this.pressedKeys.add(e.code);
     });
 
@@ -135,10 +162,60 @@ export default class Keyboard {
         .querySelector(`[data-code=${e.code}]`)
         .classList.remove('pressed');
 
+      switch (e.code) {
+        case 'ShiftLeft':
+        case 'ShiftRight':
+          if (this.modifiers.alt) {
+            this.changeLanguage();
+          }
+
+          this.toggleShiftMode();
+          this.updateAlphanumericSector();
+          break;
+        case 'ControlLeft':
+        case 'ControlRight':
+          this.modifiers.ctrl = !this.modifiers.ctrl;
+          break;
+        case 'MetaLeft':
+          this.modifiers.meta = !this.modifiers.meta;
+          break;
+        case 'AltLeft':
+        case 'AltRight':
+          if (this.modifiers.shift) {
+            this.changeLanguage();
+            this.updateAlphanumericSector();
+          }
+
+          this.modifiers.alt = !this.modifiers.alt;
+          break;
+        default:
+          break;
+      }
 
       this.pressedKeys.delete(e.code);
     });
   }
+
+  toggleShiftMode() {}
+
+  changeRegister() {
+    const uppercaseEnabled = (this.modifiers.caps && !this.modifiers.shift)
+      || (!this.modifiers.caps && this.modifiers.shift);
+    const transformFunction = uppercaseEnabled
+      ? (el) => el.toLowerCase()
+      : (el) => el.toUpperCase();
+
+    this.keysData.alphanumericKeys = Object.fromEntries(
+      Object.entries(this.keysData.alphanumericKeys).map(([code, symbol]) => [
+        code,
+        transformFunction(symbol),
+      ]),
+    );
+  }
+
+  updateAlphanumericSector() {}
+
+  changeLanguage() {}
 }
 
 // e.preventDefault();
