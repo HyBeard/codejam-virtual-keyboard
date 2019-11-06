@@ -116,7 +116,7 @@ export default class Keyboard {
     document.body.appendChild(keyboardContainer);
 
     document.body.addEventListener('keydown', (e) => {
-      if (!this.codesLayout.includes(e.code) || this.pressedKeys.has(e.code)) return;
+      if (!this.codesLayout.includes(e.code) || this.pressedKeys.has(e.code)) { return; }
 
       e.preventDefault();
 
@@ -193,6 +193,14 @@ export default class Keyboard {
       }
 
       this.pressedKeys.delete(e.code);
+    });
+
+    document.addEventListener('focusout', () => {
+      [...this.pressedKeys.keys()].forEach((code) => document
+        .querySelector(`[data-code=${code}]`)
+        .classList.toggle('pressed'));
+
+      this.pressedKeys.clear();
     });
   }
 
