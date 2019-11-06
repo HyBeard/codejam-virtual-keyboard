@@ -196,7 +196,16 @@ export default class Keyboard {
     });
   }
 
-  toggleShiftMode() {}
+  toggleShiftMode() {
+    const targetKeysData = this.modifiers.shift ? 'normal' : 'alternative';
+    Object.assign(
+      this.keysData.alphanumericKeys,
+      this.langsData[this.currentLang][targetKeysData],
+    );
+    this.changeRegister();
+
+    this.modifiers.shift = !this.modifiers.shift;
+  }
 
   changeRegister() {
     const uppercaseEnabled = (this.modifiers.caps && !this.modifiers.shift)
