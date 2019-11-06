@@ -213,7 +213,13 @@ export default class Keyboard {
     );
   }
 
-  updateAlphanumericSector() {}
+  updateAlphanumericSector() {
+    Object.keys(this.keysData.alphanumericKeys).forEach((key) => {
+      document.querySelector(
+        `[data-code=${key}]`,
+      ).innerText = this.keysData.alphanumericKeys[key];
+    });
+  }
 
   changeLanguage() {}
 }
