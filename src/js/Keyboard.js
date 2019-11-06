@@ -3,7 +3,7 @@ import controlKeys from './keysData/controlKeys';
 import modifierKeys from './keysData/modifierKeys';
 
 export default class Keyboard {
-  constructor(langsData) {
+  constructor(langsData, lang = Object.keys(langsData)[0]) {
     this.codesLayout = [
       'Backquote',
       'Digit1',
@@ -71,11 +71,11 @@ export default class Keyboard {
       'ArrowRight',
     ];
     this.langsData = langsData;
-    [this.currentLang] = Object.keys(this.langsData);
+    this.currentLang = lang;
     this.keysData = {
       controlKeys,
       modifierKeys,
-      alphanumericKeys: this.langsData[this.currentLang],
+      alphanumericKeys: { ...this.langsData[this.currentLang].normal },
     };
     this.modifiers = {
       caps: false,
@@ -84,6 +84,7 @@ export default class Keyboard {
       meta: false,
       alt: false,
     };
+    this.pressedKeys = new Set();
   }
 
   init() {
@@ -103,7 +104,7 @@ export default class Keyboard {
 
       const innerText = this.keysData.controlKeys[code]
         || this.keysData.modifierKeys[code]
-        || this.keysData.alphanumericKeys.normal[code];
+        || this.keysData.alphanumericKeys[code];
       const keyText = createDOMElement('span', 'key_box--text', {
         innerText,
       });
@@ -113,5 +114,37 @@ export default class Keyboard {
     });
 
     document.body.appendChild(keyboardContainer);
+
+    document.body.addEventListener('keydown', (e) => {
+      if (!this.codesLayout.includes(e.code) || this.pressedKeys.has(e.code)) return;
+
+      e.preventDefault();
+
+      textArea.focus();
+
+      document.querySelector(`[data-code=${e.code}]`).classList.add('pressed');
+
+      this.pressedKeys.add(e.code);
+    });
+
+    document.body.addEventListener('keyup', (e) => {
+      if (!this.codesLayout.includes(e.code)) return;
+
+      textArea.focus();
+      document
+        .querySelector(`[data-code=${e.code}]`)
+        .classList.remove('pressed');
+
+
+      this.pressedKeys.delete(e.code);
+    });
   }
 }
+
+// e.preventDefault();
+// const { selectionStart } = textArea;
+// textArea.value = textArea.value.slice(0, selectionStart)
+//   + this.keysData.alphanumericKeys.normal[e.code]
+//   + textArea.value.slice(textArea.selectionEnd);
+// textArea.selectionStart = selectionStart + 1;
+// textArea.selectionEnd = textArea.selectionStart;
