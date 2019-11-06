@@ -230,7 +230,14 @@ export default class Keyboard {
     });
   }
 
-  changeLanguage() {}
+  changeLanguage() {
+    const nextLangNumber = Object.keys(this.langsData).indexOf(
+      this.currentLang,
+    );
+    const nextLang = Object.keys(this.langsData)[nextLangNumber + 1]
+      || Object.keys(this.langsData)[0];
+    this.currentLang = nextLang;
+  }
 }
 
 // e.preventDefault();
