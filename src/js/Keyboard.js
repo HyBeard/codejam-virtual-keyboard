@@ -88,9 +88,9 @@ export default class Keyboard {
   }
 
   init() {
+    const main = createDOMElement('main', 'main');
     const keyboardContainer = createDOMElement('div', 'keyboard_container');
-    const textArea = createDOMElement('textarea');
-    keyboardContainer.appendChild(textArea);
+    const textArea = createDOMElement('textarea', 'text_input');
 
     this.codesLayout.forEach((code) => {
       const keyBox = createDOMElement(
@@ -113,14 +113,20 @@ export default class Keyboard {
       keyboardContainer.appendChild(keyBox);
     });
 
-    document.body.appendChild(keyboardContainer);
+    main.appendChild(textArea);
+    main.appendChild(keyboardContainer);
+    document.body.appendChild(main);
 
     document.body.addEventListener('keydown', (e) => {
-      if (!this.codesLayout.includes(e.code) || this.pressedKeys.has(e.code)) { return; }
+      if (!this.codesLayout.includes(e.code) || this.pressedKeys.has(e.code)) {
+        return;
+      }
 
-      e.preventDefault();
+      const { selectionStart: initSelectionStart } = textArea;
 
       textArea.focus();
+      e.preventDefault();
+      this.pressedKeys.add(e.code);
 
       document.querySelector(`[data-code=${e.code}]`).classList.add('pressed');
 
@@ -130,28 +136,64 @@ export default class Keyboard {
           this.toggleShiftMode();
           this.updateAlphanumericSector();
           break;
+
         case 'CapsLock':
           this.changeRegister();
           this.updateAlphanumericSector();
           this.modifiers.caps = !this.modifiers.caps;
           break;
+
         case 'ControlLeft':
         case 'ControlRight':
           this.modifiers.ctrl = !this.modifiers.ctrl;
           break;
+
         case 'MetaLeft':
           this.modifiers.meta = !this.modifiers.meta;
           break;
+
         case 'AltLeft':
         case 'AltRight':
           this.modifiers.alt = !this.modifiers.alt;
           break;
-        case 'Tab':
-          break;
-        default:
-      }
 
-      this.pressedKeys.add(e.code);
+        case 'Tab':
+          textArea.value = `${textArea.value.slice(
+            0,
+            initSelectionStart,
+          )}    ${textArea.value.slice(textArea.selectionEnd)}`;
+          textArea.selectionStart = initSelectionStart + 4;
+          textArea.selectionEnd = textArea.selectionStart;
+          break;
+
+        case 'Backspace':
+          if (initSelectionStart - textArea.selectionEnd === 0) {
+            textArea.value = textArea.value.slice(0, initSelectionStart - 1)
+              + textArea.value.slice(textArea.selectionEnd); textArea.selectionStart = initSelectionStart - 1;
+            textArea.selectionEnd = textArea.selectionStart;
+          } else {
+            textArea.value = textArea.value.slice(0, initSelectionStart)
+              + textArea.value.slice(textArea.selectionEnd);
+            textArea.selectionStart = initSelectionStart;
+            textArea.selectionEnd = textArea.selectionStart;
+          }
+          break;
+
+        case 'Enter':
+          textArea.value = `${textArea.value.slice(0, initSelectionStart)
+          }\n${
+            textArea.value.slice(textArea.selectionEnd)}`;
+          textArea.selectionStart = initSelectionStart + 1;
+          textArea.selectionEnd = textArea.selectionStart;
+          break;
+
+        default:
+          textArea.value = textArea.value.slice(0, initSelectionStart)
+            + this.keysData.alphanumericKeys[e.code]
+            + textArea.value.slice(textArea.selectionEnd);
+          textArea.selectionStart = initSelectionStart + 1;
+          textArea.selectionEnd = textArea.selectionStart;
+      }
     });
 
     document.body.addEventListener('keyup', (e) => {
@@ -247,11 +289,3 @@ export default class Keyboard {
     this.currentLang = nextLang;
   }
 }
-
-// e.preventDefault();
-// const { selectionStart } = textArea;
-// textArea.value = textArea.value.slice(0, selectionStart)
-//   + this.keysData.alphanumericKeys.normal[e.code]
-//   + textArea.value.slice(textArea.selectionEnd);
-// textArea.selectionStart = selectionStart + 1;
-// textArea.selectionEnd = textArea.selectionStart;

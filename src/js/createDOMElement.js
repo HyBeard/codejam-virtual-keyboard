@@ -1,7 +1,10 @@
 export default function createDOMElement(tag, classes, props, attributes) {
   const newElement = document.createElement(tag);
 
-  newElement.className = classes;
+  if (classes) {
+    newElement.className = classes;
+  }
+
   Object.assign(newElement, props);
 
   if (attributes) {

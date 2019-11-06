@@ -1,7 +1,18 @@
-body {
-  color: red;
+.keyboard_container {
+  display: grid;
+  grid-template-rows: repeat (3, 100px);
+  grid-template-columns: repeat(15, 100px);
+  column-gap: 20px;
+  row-gap: 20px;
+}
+
+.key_box {
+  cursor: pointer;
+  width: 100px;
+  height: 100px;
+  background-color: rgba(101, 203, 221, 0.199);
 }
 
 .pressed {
-  background-color: blue;
+  background-color: rgba(101, 203, 221, 0.5);
 }
