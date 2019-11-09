@@ -315,5 +315,7 @@ export default class Keyboard {
       this.keysData.alphanumericKeys,
       this.langsData[this.currentLang].normal,
     );
+
+    localStorage.setItem('lang', JSON.stringify(this.currentLang));
   }
 }
