@@ -3,9 +3,10 @@ const controlKeysLayout = {
   Tab: 'Tab',
   Delete: 'Del',
   Enter: 'Enter',
-  Space: 'Space',
+  Space: ' ',
+  ContextMenu: 'ContextMenu',
   ArrowUp: 'Up',
-  ArrowLeft: 'Left',
+  ArrowLeft: 'ArrowLeft',
   ArrowDown: 'Dwn',
   ArrowRight: 'Rgt',
 };

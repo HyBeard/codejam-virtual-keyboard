@@ -1,75 +1,13 @@
 import createDOMElement from './createDOMElement';
 import controlKeys from './keysData/controlKeys';
 import modifierKeys from './keysData/modifierKeys';
+import codesLayout from './keysData/codesLayout';
+
+const _ = require('lodash/fp');
 
 export default class Keyboard {
   constructor(langsData, lang = Object.keys(langsData)[0]) {
-    this.codesLayout = [
-      'Backquote',
-      'Digit1',
-      'Digit2',
-      'Digit3',
-      'Digit4',
-      'Digit5',
-      'Digit6',
-      'Digit7',
-      'Digit8',
-      'Digit9',
-      'Digit0',
-      'Minus',
-      'Equal',
-      'Backspace',
-      'Tab',
-      'KeyQ',
-      'KeyW',
-      'KeyE',
-      'KeyR',
-      'KeyT',
-      'KeyY',
-      'KeyU',
-      'KeyI',
-      'KeyO',
-      'KeyP',
-      'BracketLeft',
-      'BracketRight',
-      'Backslash',
-      'Delete',
-      'CapsLock',
-      'KeyA',
-      'KeyS',
-      'KeyD',
-      'KeyF',
-      'KeyG',
-      'KeyH',
-      'KeyJ',
-      'KeyK',
-      'KeyL',
-      'Semicolon',
-      'Quote',
-      'Enter',
-      'ShiftLeft',
-      'KeyZ',
-      'KeyX',
-      'KeyC',
-      'KeyV',
-      'KeyB',
-      'KeyN',
-      'KeyM',
-      'Comma',
-      'Period',
-      'Slash',
-      'ArrowUp',
-      'ShiftRight',
-      'ControlLeft',
-      'MetaLeft',
-      'AltLeft',
-      'Space',
-      'AltRight',
-      'ControlRight',
-      'ArrowLeft',
-      'ArrowDown',
-      'ArrowRight',
-    ];
+    this.codesLayout = codesLayout;
     this.langsData = langsData;
     this.currentLang = lang;
     this.keysData = {
@@ -79,16 +17,16 @@ export default class Keyboard {
     };
     this.modifiers = {
       caps: false,
-      shift: false,
-      ctrl: false,
-      meta: false,
-      alt: false,
+      shiftKey: false,
+      ctrlKey: false,
+      metaKey: false,
+      altKey: false,
     };
     this.pressedKeys = new Set();
   }
 
   init() {
-    const main = createDOMElement('main', 'main');
+    const aspectRatioWrap = createDOMElement('div', 'wrap');
     const keyboardContainer = createDOMElement('div', 'keyboard_container');
     const textArea = createDOMElement('textarea', 'text_input');
 
@@ -113,9 +51,10 @@ export default class Keyboard {
       keyboardContainer.appendChild(keyBox);
     });
 
-    main.appendChild(textArea);
-    main.appendChild(keyboardContainer);
-    document.body.appendChild(main);
+    aspectRatioWrap.appendChild(keyboardContainer);
+    document.body.appendChild(textArea);
+    document.body.appendChild(aspectRatioWrap);
+    textArea.focus();
 
     document.body.addEventListener('keydown', (e) => {
       if (!this.codesLayout.includes(e.code) || this.pressedKeys.has(e.code)) {
@@ -247,19 +186,20 @@ export default class Keyboard {
   }
 
   toggleShiftMode() {
-    const targetKeysData = this.modifiers.shift ? 'normal' : 'alternative';
+    const targetKeysData = this.modifiers.shiftKey ? 'normal' : 'alternative';
     Object.assign(
       this.keysData.alphanumericKeys,
       this.langsData[this.currentLang][targetKeysData],
     );
+
     this.changeRegister();
 
-    this.modifiers.shift = !this.modifiers.shift;
+    this.modifiers.shiftKey = !this.modifiers.shiftKey;
   }
 
   changeRegister() {
-    const uppercaseEnabled = (this.modifiers.caps && !this.modifiers.shift)
-      || (!this.modifiers.caps && this.modifiers.shift);
+    const uppercaseEnabled = (this.modifiers.caps && !this.modifiers.shiftKey)
+      || (!this.modifiers.caps && this.modifiers.shiftKey);
     const transformFunction = uppercaseEnabled
       ? (el) => el.toLowerCase()
       : (el) => el.toUpperCase();
@@ -287,5 +227,9 @@ export default class Keyboard {
     const nextLang = Object.keys(this.langsData)[nextLangNumber + 1]
       || Object.keys(this.langsData)[0];
     this.currentLang = nextLang;
+    Object.assign(
+      this.keysData.alphanumericKeys,
+      this.langsData[this.currentLang].normal,
+    );
   }
 }
