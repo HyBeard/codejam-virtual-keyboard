@@ -61,15 +61,17 @@ export default class Keyboard {
 
       const { selectionStart: initSelectionStart } = textArea;
 
-      textArea.focus();
-      e.preventDefault();
-      this.pressedKeys.add(e.code);
+      function insertSymbol(sym, cursorDisplacement = sym.length) {
+        textArea.value = textArea.value.slice(0, initSelectionStart)
+          + sym
+          + textArea.value.slice(textArea.selectionEnd);
+        textArea.selectionStart = initSelectionStart + cursorDisplacement;
+        textArea.selectionEnd = textArea.selectionStart;
+      }
 
       switch (code) {
         case 'ShiftLeft':
         case 'ShiftRight':
-          this.toggleShiftMode();
-          this.updateAlphanumericSector();
           if (this.modifiers.shiftKey && isKeydown) return;
 
           if (!isKeydown && this.modifiers.altKey) {
@@ -112,24 +114,39 @@ export default class Keyboard {
           break;
 
         case 'Tab':
-          textArea.value = `${textArea.value.slice(
-            0,
-            initSelectionStart,
-          )}    ${textArea.value.slice(textArea.selectionEnd)}`;
-          textArea.selectionStart = initSelectionStart + 4;
-          textArea.selectionEnd = textArea.selectionStart;
+          insertSymbol('    ');
           break;
 
         case 'Backspace':
           if (initSelectionStart - textArea.selectionEnd === 0) {
             textArea.value = textArea.value.slice(0, initSelectionStart - 1)
-              + textArea.value.slice(textArea.selectionEnd); textArea.selectionStart = initSelectionStart - 1;
+              + textArea.value.slice(textArea.selectionEnd);
+            textArea.selectionStart = initSelectionStart - 1;
             textArea.selectionEnd = textArea.selectionStart;
           } else {
+            insertSymbol('');
+          }
+          break;
+
+        case 'Enter':
+          insertSymbol('\n');
+          break;
+
+        case 'Space':
+          insertSymbol(' ');
+          break;
+
+        case 'ContextMenu':
+          break;
+
+        case 'Delete':
+          if (initSelectionStart - textArea.selectionEnd === 0) {
             textArea.value = textArea.value.slice(0, initSelectionStart)
-              + textArea.value.slice(textArea.selectionEnd);
+              + textArea.value.slice(textArea.selectionEnd + 1);
             textArea.selectionStart = initSelectionStart;
             textArea.selectionEnd = textArea.selectionStart;
+          } else {
+            insertSymbol('');
           }
           break;
 
@@ -154,6 +171,10 @@ export default class Keyboard {
           break;
 
         default:
+          insertSymbol(this.keysData.alphanumericKeys[code]);
+      }
+    };
+
     document.body.addEventListener('keydown', (ev) => {
       const { code } = ev;
       if (!this.codesLayout.includes(code) || this.pressedKeys.has(code)) {
