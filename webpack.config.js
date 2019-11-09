@@ -1,8 +1,6 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const webpack = require('webpack');
 
-const NODE_ENV = process.env.NODE_ENV || 'development';
 
 module.exports = {
   entry: './src/index.js',
@@ -10,7 +8,6 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'),
     filename: 'app.bundle.js',
   },
-  devtool: NODE_ENV === 'development' ? 'eval' : null,
 
   module: {
     rules: [
@@ -48,6 +45,5 @@ module.exports = {
       template: path.resolve(__dirname, 'src/layouts/index.html'),
       inject: 'body',
     }),
-    new webpack.EnvironmentPlugin('NODE_ENV'),
   ],
 };

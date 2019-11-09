@@ -217,7 +217,7 @@ export default class Keyboard {
       const { code } = keyBox.dataset;
 
       if (code === 'CapsLock') {
-      document
+        document
           .querySelector('[data-code=CapsLock]')
           .classList.toggle('active');
       }
@@ -230,7 +230,7 @@ export default class Keyboard {
         keyBox.classList.add('pressed');
         takeKeyAction(code, true);
         this.pressedKeys.add(code);
-          }
+      }
     });
 
     document.addEventListener('mouseup', () => {
@@ -240,7 +240,7 @@ export default class Keyboard {
         || !lastKeyCode
       ) {
         return;
-          }
+      }
 
       const keyBox = document.querySelector(`[data-code=${lastKeyCode}]`);
 
@@ -248,12 +248,24 @@ export default class Keyboard {
       this.pressedKeys.delete(lastKeyCode);
     });
 
-    document.addEventListener('focusout', () => {
-      [...this.pressedKeys.keys()].forEach((code) => document
-        .querySelector(`[data-code=${code}]`)
-        .classList.toggle('pressed'));
+    window.addEventListener(
+      'blur',
+      () => {
+        [...this.pressedKeys.keys()].forEach((code) => {
+          if (this.keysData.modifierKeys[code]) return;
 
-      this.pressedKeys.clear();
+          document
+            .querySelector(`[data-code=${code}]`)
+            .classList.remove('pressed');
+        });
+
+        this.pressedKeys.clear();
+      },
+      false,
+    );
+
+    textArea.addEventListener('focusout', () => {
+      textArea.focus();
     });
   }
 
