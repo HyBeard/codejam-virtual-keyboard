@@ -37,6 +37,15 @@ module.exports = {
           },
         },
       },
+      {
+        test: /\.(svg)$/,
+        use: {
+          loader: 'file-loader',
+          options: {
+            name: 'icons/[folder]_[name].[ext]',
+          },
+        },
+      },
     ],
   },
 

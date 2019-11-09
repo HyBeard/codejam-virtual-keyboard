@@ -1,3 +1,21 @@
+@font-face {
+  font-family: 'Font Awesome 5 Free';
+  font-style: normal;
+  font-weight: 900;
+  font-display: auto;
+  src: url('../assets/fonts/fa-solid-900.woff2') format('woff2');
+}
+
+body {
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  font-size: 1em;
+  font-weight: 600;
+  color: rgb(6, 67, 77);
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
 .wrap {
   position: relative;
   padding-bottom: 31%;
@@ -5,14 +23,18 @@
 
 .text_input {
   width: 100%;
+  height: 200px;
+  padding: 1%;
   resize: none;
   overflow: auto;
-  min-height: 5em;
-  
+  box-sizing: border-box;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  font-size: 1em;
 }
 
 .keyboard_container {
   position: absolute;
+  left: 0;
   width: 100%;
   height: 100%;
   display: grid;
@@ -20,19 +42,33 @@
   grid-template-rows: repeat(5, auto);
   column-gap: 5px;
   row-gap: 5px;
+  box-sizing: border-box;
+  padding: 0 50px;
 }
 
 .key_box {
-  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   grid-column: span 2;
   background-color: rgba(101, 203, 221, 0.199);
+  border: 1px solid rgba(101, 203, 221, 0.329);
   border-radius: 5%;
   cursor: pointer;
-  
+  user-select: none;
 }
 
 .pressed {
   background-color: rgba(101, 203, 221, 0.5);
+  box-shadow: inset 0px 0px 5px 2px rgba(101, 203, 221, 0.6);
+  transition: 0.2s;
+}
+
+%icon {
+  display: inline-block;
+  padding-left: 20px;
+  font-size: 25px;
+  font-family: 'Font Awesome 5 Free';
 }
 
 [data-code='Tab'] {
@@ -42,28 +78,36 @@
 [data-code='CapsLock'] {
   position: relative;
   grid-column: span 4;
-    &::after {
+  &::after {
     content: '';
     position: absolute;
     top: 10px;
     right: 10px;
-    width: 5px;
-    height: 5px;
+    width: 8px;
+    height: 8px;
     border: 1px solid black;
     border-radius: 100%;
   }
 }
 
 .active::after {
-  background-color: green;
+  background-color: rgb(6, 67, 77);
 }
 
 [data-code='ShiftLeft'] {
   grid-column: span 5;
+  &::after {
+    @extend %icon;
+    content: '\f151';
+  }
 }
 
 [data-code='ShiftRight'] {
   grid-column: span 4;
+  &::after {
+    @extend %icon;
+    content: '\f151';
+  }
 }
 
 [data-code='Space'] {
@@ -72,10 +116,67 @@
 
 [data-code='Backspace'] {
   grid-column: span 5;
+  &::after {
+    @extend %icon;
+    content: '\f55a';
+  }
+}
+
+[data-code='ArrowUp'] {
+  font-size: 0;
+
+  &::after {
+    @extend %icon;
+    padding: 0;
+    content: '\f062';
+  }
+}
+
+[data-code='ArrowDown'] {
+  font-size: 0;
+
+  &::after {
+    @extend %icon;
+    padding: 0;
+    content: '\f063';
+  }
+}
+
+[data-code='ArrowLeft'] {
+  font-size: 0;
+
+  &::after {
+    @extend %icon;
+    padding: 0;
+    content: '\f060';
+  }
+}
+
+[data-code='ArrowRight'] {
+  font-size: 0;
+
+  &::after {
+    @extend %icon;
+    padding: 0;
+    content: '\f061';
+  }
 }
 
 [data-code='Enter'] {
   grid-column: span 5;
+  &::after {
+    @extend %icon;
+    content: url('../assets/icons/keyboard_return-24px.svg');
+  }
+}
+
+[data-code='ContextMenu'] {
+  font-size: 0;
+  &::after {
+    @extend %icon;
+    padding: 0;
+    content: '\f0c9';
+  }
 }
 
 [data-code='ControlLeft'] {
