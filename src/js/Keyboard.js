@@ -67,25 +67,40 @@ export default class Keyboard {
       e.preventDefault();
       this.pressedKeys.add(e.code);
 
-      document.querySelector(`[data-code=${e.code}]`).classList.add('pressed');
-
-      switch (e.code) {
+      switch (code) {
         case 'ShiftLeft':
         case 'ShiftRight':
           this.toggleShiftMode();
           this.updateAlphanumericSector();
+          if (this.modifiers.shiftKey && isKeydown) return;
+
+          if (!isKeydown && this.modifiers.altKey) {
+            this.changeLanguage();
+          }
+          if (!isKeydown) return;
+
+
           break;
 
         case 'CapsLock':
           this.changeRegister();
-          this.updateAlphanumericSector();
+          if (this.modifiers.ctrlKey && isKeydown) return;
+
+          this.modifiers.ctrlKey = !this.modifiers.ctrlKey;
           this.modifiers.caps = !this.modifiers.caps;
           break;
 
-        case 'ControlLeft':
+          this.modifiers.metaKey = !this.modifiers.metaKey;
         case 'ControlRight':
           this.modifiers.ctrl = !this.modifiers.ctrl;
-          break;
+          if (this.modifiers.altKey && isKeydown) return;
+
+          if (!isKeydown && this.modifiers.shiftKey) {
+            this.changeLanguage();
+            this.updateAlphanumericSector();
+          }
+
+          this.modifiers.altKey = !this.modifiers.altKey;
 
         case 'MetaLeft':
           this.modifiers.meta = !this.modifiers.meta;
