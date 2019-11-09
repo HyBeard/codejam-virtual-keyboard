@@ -56,10 +56,8 @@ export default class Keyboard {
     document.body.appendChild(aspectRatioWrap);
     textArea.focus();
 
-    document.body.addEventListener('keydown', (e) => {
-      if (!this.codesLayout.includes(e.code) || this.pressedKeys.has(e.code)) {
-        return;
-      }
+    const takeKeyAction = (code, isKeydown) => {
+      if (!isKeydown && !this.keysData.modifierKeys[code]) return;
 
       const { selectionStart: initSelectionStart } = textArea;
 
@@ -77,22 +75,32 @@ export default class Keyboard {
           if (!isKeydown && this.modifiers.altKey) {
             this.changeLanguage();
           }
-          if (!isKeydown) return;
 
-
+          this.toggleShiftMode();
+          this.updateAlphanumericSector();
           break;
 
         case 'CapsLock':
-          this.changeRegister();
-          if (this.modifiers.ctrlKey && isKeydown) return;
+          if (!isKeydown) return;
 
-          this.modifiers.ctrlKey = !this.modifiers.ctrlKey;
+          this.changeRegister();
+          this.updateAlphanumericSector();
           this.modifiers.caps = !this.modifiers.caps;
           break;
 
-          this.modifiers.metaKey = !this.modifiers.metaKey;
+        case 'ControlLeft':
         case 'ControlRight':
-          this.modifiers.ctrl = !this.modifiers.ctrl;
+          if (this.modifiers.ctrlKey && isKeydown) return;
+
+          this.modifiers.ctrlKey = !this.modifiers.ctrlKey;
+          break;
+
+        case 'MetaLeft':
+          this.modifiers.metaKey = !this.modifiers.metaKey;
+          break;
+
+        case 'AltLeft':
+        case 'AltRight':
           if (this.modifiers.altKey && isKeydown) return;
 
           if (!isKeydown && this.modifiers.shiftKey) {
@@ -101,14 +109,6 @@ export default class Keyboard {
           }
 
           this.modifiers.altKey = !this.modifiers.altKey;
-
-        case 'MetaLeft':
-          this.modifiers.meta = !this.modifiers.meta;
-          break;
-
-        case 'AltLeft':
-        case 'AltRight':
-          this.modifiers.alt = !this.modifiers.alt;
           break;
 
         case 'Tab':
@@ -133,62 +133,98 @@ export default class Keyboard {
           }
           break;
 
-        case 'Enter':
-          textArea.value = `${textArea.value.slice(0, initSelectionStart)
-          }\n${
-            textArea.value.slice(textArea.selectionEnd)}`;
+        case 'ArrowUp':
+          textArea.selectionStart = initSelectionStart - 10;
+          textArea.selectionEnd = textArea.selectionStart;
+          break;
+
+        case 'ArrowDown':
+          textArea.selectionStart = initSelectionStart + 10;
+          textArea.selectionEnd = textArea.selectionStart;
+          break;
+
+        case 'ArrowLeft':
+          textArea.selectionStart = initSelectionStart - 1;
+          textArea.selectionEnd = textArea.selectionStart;
+          break;
+
+        case 'ArrowRight':
           textArea.selectionStart = initSelectionStart + 1;
           textArea.selectionEnd = textArea.selectionStart;
           break;
 
         default:
-          textArea.value = textArea.value.slice(0, initSelectionStart)
-            + this.keysData.alphanumericKeys[e.code]
-            + textArea.value.slice(textArea.selectionEnd);
-          textArea.selectionStart = initSelectionStart + 1;
-          textArea.selectionEnd = textArea.selectionStart;
+    document.body.addEventListener('keydown', (ev) => {
+      const { code } = ev;
+      if (!this.codesLayout.includes(code) || this.pressedKeys.has(code)) {
+        return;
+      }
+
+      if (code === 'CapsLock') {
+        document
+          .querySelector('[data-code=CapsLock]')
+          .classList.toggle('active');
+      }
+
+      document.querySelector(`[data-code=${code}]`).classList.add('pressed');
+
+      this.pressedKeys.add(code);
+      ev.preventDefault();
+      takeKeyAction(code, true);
+    });
+
+    document.body.addEventListener('keypress', (ev) => {
+      if (this.keysData.alphanumericKeys[ev.code]) {
+        ev.preventDefault();
+        takeKeyAction(ev.code, true);
       }
     });
 
-    document.body.addEventListener('keyup', (e) => {
-      if (!this.codesLayout.includes(e.code)) return;
+    document.body.addEventListener('keyup', ({ code }) => {
+      if (!this.codesLayout.includes(code)) return;
 
-      textArea.focus();
+      document.querySelector(`[data-code=${code}]`).classList.remove('pressed');
+
+      this.pressedKeys.delete(code);
+      takeKeyAction(code, false);
+    });
+
+    keyboardContainer.addEventListener('mousedown', ({ target }) => {
+      if (!target.closest('.key_box')) return;
+
+      const keyBox = target.closest('.key_box');
+      const { code } = keyBox.dataset;
+
+      if (code === 'CapsLock') {
       document
-        .querySelector(`[data-code=${e.code}]`)
-        .classList.remove('pressed');
-
-      switch (e.code) {
-        case 'ShiftLeft':
-        case 'ShiftRight':
-          if (this.modifiers.alt) {
-            this.changeLanguage();
-          }
-
-          this.toggleShiftMode();
-          this.updateAlphanumericSector();
-          break;
-        case 'ControlLeft':
-        case 'ControlRight':
-          this.modifiers.ctrl = !this.modifiers.ctrl;
-          break;
-        case 'MetaLeft':
-          this.modifiers.meta = !this.modifiers.meta;
-          break;
-        case 'AltLeft':
-        case 'AltRight':
-          if (this.modifiers.shift) {
-            this.changeLanguage();
-            this.updateAlphanumericSector();
-          }
-
-          this.modifiers.alt = !this.modifiers.alt;
-          break;
-        default:
-          break;
+          .querySelector('[data-code=CapsLock]')
+          .classList.toggle('active');
       }
 
-      this.pressedKeys.delete(e.code);
+      if (keyBox.classList.contains('pressed')) {
+        keyBox.classList.remove('pressed');
+        takeKeyAction(code, false);
+        this.pressedKeys.delete(code);
+      } else {
+        keyBox.classList.add('pressed');
+        takeKeyAction(code, true);
+        this.pressedKeys.add(code);
+          }
+    });
+
+    document.addEventListener('mouseup', () => {
+      const lastKeyCode = _.last([...this.pressedKeys]);
+      if (
+        (this.keysData.modifierKeys[lastKeyCode] && lastKeyCode !== 'CapsLock')
+        || !lastKeyCode
+      ) {
+        return;
+          }
+
+      const keyBox = document.querySelector(`[data-code=${lastKeyCode}]`);
+
+      keyBox.classList.remove('pressed');
+      this.pressedKeys.delete(lastKeyCode);
     });
 
     document.addEventListener('focusout', () => {
