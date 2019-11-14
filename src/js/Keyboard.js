@@ -56,125 +56,6 @@ export default class Keyboard {
     document.body.appendChild(aspectRatioWrap);
     textArea.focus();
 
-    const takeKeyAction = (code, isKeydown) => {
-      if (!isKeydown && !this.keysData.modifierKeys[code]) return;
-
-      const { selectionStart: initSelectionStart } = textArea;
-
-      function insertSymbol(sym, cursorDisplacement = sym.length) {
-        textArea.value = textArea.value.slice(0, initSelectionStart)
-          + sym
-          + textArea.value.slice(textArea.selectionEnd);
-        textArea.selectionStart = initSelectionStart + cursorDisplacement;
-        textArea.selectionEnd = textArea.selectionStart;
-      }
-
-      switch (code) {
-        case 'ShiftLeft':
-        case 'ShiftRight':
-          if (this.modifiers.shiftKey && isKeydown) return;
-
-          if (!isKeydown && this.modifiers.altKey) {
-            this.changeLanguage();
-          }
-
-          this.toggleShiftMode();
-          this.updateAlphanumericSector();
-          break;
-
-        case 'CapsLock':
-          if (!isKeydown) return;
-
-          this.changeRegister();
-          this.updateAlphanumericSector();
-          this.modifiers.caps = !this.modifiers.caps;
-          break;
-
-        case 'ControlLeft':
-        case 'ControlRight':
-          if (this.modifiers.ctrlKey && isKeydown) return;
-
-          this.modifiers.ctrlKey = !this.modifiers.ctrlKey;
-          break;
-
-        case 'MetaLeft':
-          this.modifiers.metaKey = !this.modifiers.metaKey;
-          break;
-
-        case 'AltLeft':
-        case 'AltRight':
-          if (this.modifiers.altKey && isKeydown) return;
-
-          if (!isKeydown && this.modifiers.shiftKey) {
-            this.changeLanguage();
-            this.updateAlphanumericSector();
-          }
-
-          this.modifiers.altKey = !this.modifiers.altKey;
-          break;
-
-        case 'Tab':
-          insertSymbol('    ');
-          break;
-
-        case 'Backspace':
-          if (initSelectionStart - textArea.selectionEnd === 0) {
-            textArea.value = textArea.value.slice(0, initSelectionStart - 1)
-              + textArea.value.slice(textArea.selectionEnd);
-            textArea.selectionStart = initSelectionStart - 1;
-            textArea.selectionEnd = textArea.selectionStart;
-          } else {
-            insertSymbol('');
-          }
-          break;
-
-        case 'Enter':
-          insertSymbol('\n');
-          break;
-
-        case 'Space':
-          insertSymbol(' ');
-          break;
-
-        case 'ContextMenu':
-          break;
-
-        case 'Delete':
-          if (initSelectionStart - textArea.selectionEnd === 0) {
-            textArea.value = textArea.value.slice(0, initSelectionStart)
-              + textArea.value.slice(textArea.selectionEnd + 1);
-            textArea.selectionStart = initSelectionStart;
-            textArea.selectionEnd = textArea.selectionStart;
-          } else {
-            insertSymbol('');
-          }
-          break;
-
-        case 'ArrowUp':
-          textArea.selectionStart = initSelectionStart - 10;
-          textArea.selectionEnd = textArea.selectionStart;
-          break;
-
-        case 'ArrowDown':
-          textArea.selectionStart = initSelectionStart + 10;
-          textArea.selectionEnd = textArea.selectionStart;
-          break;
-
-        case 'ArrowLeft':
-          textArea.selectionStart = initSelectionStart - 1;
-          textArea.selectionEnd = textArea.selectionStart;
-          break;
-
-        case 'ArrowRight':
-          textArea.selectionStart = initSelectionStart + 1;
-          textArea.selectionEnd = textArea.selectionStart;
-          break;
-
-        default:
-          insertSymbol(this.keysData.alphanumericKeys[code]);
-      }
-    };
-
     document.body.addEventListener('keydown', (ev) => {
       const { code } = ev;
       if (!this.codesLayout.includes(code) || this.pressedKeys.has(code)) {
@@ -191,13 +72,13 @@ export default class Keyboard {
 
       this.pressedKeys.add(code);
       ev.preventDefault();
-      takeKeyAction(code, true);
+      this.processKeyAction(code, true, textArea);
     });
 
     document.body.addEventListener('keypress', (ev) => {
       if (this.keysData.alphanumericKeys[ev.code]) {
         ev.preventDefault();
-        takeKeyAction(ev.code, true);
+        this.processKeyAction(ev.code, true, textArea);
       }
     });
 
@@ -207,7 +88,7 @@ export default class Keyboard {
       document.querySelector(`[data-code=${code}]`).classList.remove('pressed');
 
       this.pressedKeys.delete(code);
-      takeKeyAction(code, false);
+      this.processKeyAction(code, false, textArea);
     });
 
     keyboardContainer.addEventListener('mousedown', ({ target }) => {
@@ -224,11 +105,11 @@ export default class Keyboard {
 
       if (keyBox.classList.contains('pressed')) {
         keyBox.classList.remove('pressed');
-        takeKeyAction(code, false);
+        this.processKeyAction(code, false, textArea);
         this.pressedKeys.delete(code);
       } else {
         keyBox.classList.add('pressed');
-        takeKeyAction(code, true);
+        this.processKeyAction(code, true, textArea);
         this.pressedKeys.add(code);
       }
     });
@@ -267,6 +148,151 @@ export default class Keyboard {
     textArea.addEventListener('focusout', () => {
       textArea.focus();
     });
+  }
+
+  static updateTextArea(textArea, updatedProps) {
+    Object.assign(textArea, updatedProps);
+  }
+
+  takeModifyKey(code, isKeydown) {
+    if (!isKeydown && !this.keysData.modifierKeys[code]) return;
+
+    switch (code) {
+      case 'ShiftLeft':
+      case 'ShiftRight':
+        if (this.modifiers.shiftKey && isKeydown) return;
+
+        if (!isKeydown && this.modifiers.altKey) {
+          this.changeLanguage();
+        }
+
+        this.toggleShiftMode();
+        this.updateAlphanumericSector();
+        break;
+
+      case 'CapsLock':
+        if (!isKeydown) return;
+
+        this.changeRegister();
+        this.updateAlphanumericSector();
+        this.modifiers.caps = !this.modifiers.caps;
+        break;
+
+      case 'ControlLeft':
+      case 'ControlRight':
+        if (this.modifiers.ctrlKey && isKeydown) return;
+
+        this.modifiers.ctrlKey = !this.modifiers.ctrlKey;
+        break;
+
+      case 'MetaLeft':
+        this.modifiers.metaKey = !this.modifiers.metaKey;
+        break;
+
+      case 'AltLeft':
+      case 'AltRight':
+        if (this.modifiers.altKey && isKeydown) return;
+
+        if (!isKeydown && this.modifiers.shiftKey) {
+          this.changeLanguage();
+          this.updateAlphanumericSector();
+        }
+
+        this.modifiers.altKey = !this.modifiers.altKey;
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  takeChangeKeyAction(code, textArea) {
+    const { value, selectionStart, selectionEnd } = textArea;
+    const updatedProps = {
+      value,
+      selectionEnd,
+      selectionStart,
+    };
+
+    function insertSymbol(sym, cursorDisplacement = sym.length) {
+      updatedProps.value = value.slice(0, selectionStart)
+        + sym
+        + value.slice(selectionEnd);
+      updatedProps.selectionStart = selectionStart + cursorDisplacement;
+      updatedProps.selectionEnd = updatedProps.selectionStart;
+    }
+
+    switch (code) {
+      case 'Tab':
+        insertSymbol('    ');
+        break;
+
+      case 'Backspace':
+        if (selectionStart - selectionEnd === 0) {
+          updatedProps.value = value.slice(0, selectionStart - 1)
+            + value.slice(selectionEnd);
+          updatedProps.selectionStart -= 1;
+          updatedProps.selectionEnd = updatedProps.selectionStart;
+        } else {
+          insertSymbol('');
+        }
+        break;
+
+      case 'Enter':
+        insertSymbol('\n');
+        break;
+
+      case 'Space':
+        insertSymbol(' ');
+        break;
+
+      case 'ContextMenu':
+        break;
+
+      case 'Delete':
+        if (selectionStart - selectionEnd === 0) {
+          updatedProps.value = value.slice(0, selectionStart)
+            + value.slice(selectionEnd + 1);
+          updatedProps.selectionStart = selectionStart;
+          updatedProps.selectionEnd = selectionStart;
+        } else {
+          insertSymbol('');
+        }
+        break;
+
+      case 'ArrowUp':
+        updatedProps.selectionStart -= 10;
+        updatedProps.selectionEnd = selectionStart;
+        break;
+
+      case 'ArrowDown':
+        updatedProps.selectionStart += 10;
+        updatedProps.selectionEnd = selectionStart;
+        break;
+
+      case 'ArrowLeft':
+        updatedProps.selectionStart -= 1;
+        updatedProps.selectionEnd = selectionStart;
+        break;
+
+      case 'ArrowRight':
+        updatedProps.selectionStart += 1;
+        updatedProps.selectionEnd = selectionStart;
+        break;
+
+      default:
+        insertSymbol(this.keysData.alphanumericKeys[code]);
+    }
+
+    Keyboard.updateTextArea(textArea, updatedProps);
+  }
+
+  processKeyAction(code, isKeydown, textArea) {
+    if (this.keysData.modifierKeys[code]) {
+      this.takeModifyKey(code, isKeydown);
+    } else {
+      this.takeChangeKeyAction(code, textArea);
+    }
   }
 
   toggleShiftMode() {
