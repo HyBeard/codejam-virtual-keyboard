@@ -150,10 +150,6 @@ export default class Keyboard {
     });
   }
 
-  static updateTextArea(textArea, updatedProps) {
-    Object.assign(textArea, updatedProps);
-  }
-
   takeModifyKey(code, isKeydown) {
     if (!isKeydown && !this.keysData.modifierKeys[code]) return;
 
@@ -206,91 +202,87 @@ export default class Keyboard {
     }
   }
 
-  takeChangeKeyAction(code, textArea) {
-    const { value, selectionStart, selectionEnd } = textArea;
+  static changeTextElement(
+    editableItem,
+    insertedSymbol,
+    cursorDisplacement = insertedSymbol.length,
+    isBackSpace,
+    isDelete,
+  ) {
+    const { value, selectionStart, selectionEnd } = editableItem;
+    const sliceStart = (isBackSpace && selectionStart === selectionEnd)
+      ? selectionStart - 1
+      : selectionStart;
+    const sliceEnd = (isDelete && selectionStart === selectionEnd)
+      ? selectionEnd + 1
+      : selectionEnd;
     const updatedProps = {
       value,
-      selectionEnd,
       selectionStart,
     };
 
-    function insertSymbol(sym, cursorDisplacement = sym.length) {
-      updatedProps.value = value.slice(0, selectionStart)
-        + sym
-        + value.slice(selectionEnd);
-      updatedProps.selectionStart = selectionStart + cursorDisplacement;
-      updatedProps.selectionEnd = updatedProps.selectionStart;
-    }
+    updatedProps.value = value.slice(0, sliceStart)
+      + insertedSymbol
+      + value.slice(sliceEnd);
+    updatedProps.selectionStart = selectionStart + cursorDisplacement;
+
+    Object.assign(editableItem, updatedProps, { selectionEnd: updatedProps.selectionStart });
+  }
+
+  takeChangeKeyAction(code, textArea) {
+    const changeTextArea = Keyboard.changeTextElement.bind(null, textArea);
 
     switch (code) {
       case 'Tab':
-        insertSymbol('    ');
+        changeTextArea('    ');
         break;
 
       case 'Backspace':
-        if (selectionStart - selectionEnd === 0) {
-          updatedProps.value = value.slice(0, selectionStart - 1)
-            + value.slice(selectionEnd);
-          updatedProps.selectionStart -= 1;
-          updatedProps.selectionEnd = updatedProps.selectionStart;
-        } else {
-          insertSymbol('');
-        }
+        changeTextArea('', 0, true);
+
         break;
 
       case 'Enter':
-        insertSymbol('\n');
+        changeTextArea('\n');
         break;
 
       case 'Space':
-        insertSymbol(' ');
+        changeTextArea(' ');
         break;
 
       case 'ContextMenu':
         break;
 
       case 'Delete':
-        if (selectionStart - selectionEnd === 0) {
-          updatedProps.value = value.slice(0, selectionStart)
-            + value.slice(selectionEnd + 1);
-          updatedProps.selectionStart = selectionStart;
-          updatedProps.selectionEnd = selectionStart;
-        } else {
-          insertSymbol('');
-        }
+        changeTextArea('', 0, false, true);
         break;
 
       case 'ArrowUp':
-        updatedProps.selectionStart -= 10;
-        updatedProps.selectionEnd = selectionStart;
+        changeTextArea('', -10);
         break;
 
       case 'ArrowDown':
-        updatedProps.selectionStart += 10;
-        updatedProps.selectionEnd = selectionStart;
+        changeTextArea('', 10);
         break;
 
       case 'ArrowLeft':
-        updatedProps.selectionStart -= 1;
-        updatedProps.selectionEnd = selectionStart;
+        changeTextArea('', -1);
         break;
 
       case 'ArrowRight':
-        updatedProps.selectionStart += 1;
-        updatedProps.selectionEnd = selectionStart;
+        changeTextArea('', 1);
         break;
 
       default:
-        insertSymbol(this.keysData.alphanumericKeys[code]);
+        changeTextArea(this.keysData.alphanumericKeys[code]);
     }
-
-    Keyboard.updateTextArea(textArea, updatedProps);
   }
 
   processKeyAction(code, isKeydown, textArea) {
     if (this.keysData.modifierKeys[code]) {
       this.takeModifyKey(code, isKeydown);
     } else {
+      if (!isKeydown) return;
       this.takeChangeKeyAction(code, textArea);
     }
   }
@@ -310,14 +302,13 @@ export default class Keyboard {
   changeRegister() {
     const uppercaseEnabled = (this.modifiers.caps && !this.modifiers.shiftKey)
       || (!this.modifiers.caps && this.modifiers.shiftKey);
-    const transformFunction = uppercaseEnabled
-      ? (el) => el.toLowerCase()
-      : (el) => el.toUpperCase();
 
     this.keysData.alphanumericKeys = Object.fromEntries(
       Object.entries(this.keysData.alphanumericKeys).map(([code, symbol]) => [
         code,
-        transformFunction(symbol),
+        uppercaseEnabled
+          ? symbol.toLowerCase()
+          : symbol.toUpperCase(),
       ]),
     );
   }
@@ -331,11 +322,10 @@ export default class Keyboard {
   }
 
   changeLanguage() {
-    const nextLangNumber = Object.keys(this.langsData).indexOf(
-      this.currentLang,
-    );
-    const nextLang = Object.keys(this.langsData)[nextLangNumber + 1]
-      || Object.keys(this.langsData)[0];
+    const langList = Object.keys(this.langsData);
+    const nextLangNumber = langList.indexOf(this.currentLang);
+    const nextLang = langList[nextLangNumber + 1]
+      || langList[0];
     this.currentLang = nextLang;
     Object.assign(
       this.keysData.alphanumericKeys,
